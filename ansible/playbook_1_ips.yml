@@ -9,7 +9,7 @@
         loopback: "15.15.15.1"
         interfaces:
           - name: Ethernet0/1
-            desc: "Hacia P_2 (Clase A) - CONEXION UBUNTU EVE-NG PROXMOX PRUEBA"
+            desc: "Hacia P_2 (Clase A) - CONEXION UBUNTU EVE-NG PROXMOX PRUEBA MANUAL GITHUB"
             ip: "10.15.12.1"
             mask: "255.255.255.252"
           - name: Ethernet0/2
