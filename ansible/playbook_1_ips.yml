@@ -1,0 +1,91 @@
+---
+- name: Fase 1 - CONFIGURACIÓN Y AUDITORÍA DE ENLACES CORE Y LOOPBACKS (VERSIÓN 2)
+  hosts: routers
+  gather_facts: no
+
+  vars:
+    configuraciones:
+      PE_1:
+        loopback: "15.15.15.1"
+        interfaces:
+          - name: Ethernet0/1
+            desc: "Hacia P_2 (Clase A) - [NETDEVOPS CD VERIFIED]"
+            ip: "10.15.12.1"
+            mask: "255.255.255.252"
+          - name: Ethernet0/2
+            desc: "Hacia P_1 (Clase A) - [NETDEVOPS CD VERIFIED]"
+            ip: "10.15.11.1"
+            mask: "255.255.255.252"
+      PE_2:
+        loopback: "15.15.15.5"
+        interfaces:
+          - name: Ethernet0/0
+            desc: "Hacia P_1 (Clase A) - [NETDEVOPS CD VERIFIED]"
+            ip: "10.15.15.2"
+            mask: "255.255.255.252"
+          - name: Ethernet0/1
+            desc: "Hacia P_2 (Clase A) - [NETDEVOPS CD VERIFIED]"
+            ip: "10.15.25.2"
+            mask: "255.255.255.252"
+      P_1:
+        loopback: "15.15.15.3"
+        interfaces:
+          - name: Ethernet0/0
+            desc: "Hacia PE_1"
+            ip: "10.15.11.2"
+            mask: "255.255.255.252"
+          - name: Ethernet0/1
+            desc: "Hacia RR_1"
+            ip: "10.15.14.1"
+            mask: "255.255.255.252"
+          - name: Ethernet0/2
+            desc: "Hacia PE_2"
+            ip: "10.15.15.1"
+            mask: "255.255.255.252"
+      P_2:
+        loopback: "15.15.15.2"
+        interfaces:
+          - name: Ethernet0/0
+            desc: "Hacia PE_1"
+            ip: "10.15.12.2"
+            mask: "255.255.255.252"
+          - name: Ethernet0/1
+            desc: "Hacia RR_1"
+            ip: "10.15.24.1"
+            mask: "255.255.255.252"
+          - name: Ethernet0/2
+            desc: "Hacia PE_2"
+            ip: "10.15.25.1"
+            mask: "255.255.255.252"
+      RR_1:
+        loopback: "15.15.15.4"
+        interfaces:
+          - name: Ethernet0/0
+            desc: "Hacia P_2 - [AUDITADO POR NETDEVOPS CD - DEMO]"
+            ip: "10.15.24.2"
+            mask: "255.255.255.252"
+          - name: Ethernet0/1
+            desc: "Hacia P_1 - [AUDITADO POR NETDEVOPS CD - DEMO]"
+            ip: "10.15.14.2"
+            mask: "255.255.255.252"
+
+  tasks:
+    - name: 1. Configurar interfaz Loopback0
+      cisco.ios.ios_config:
+        lines:
+          - description "LOOPBACK CORE - GESTIONADO POR NETDEVOPS CD"
+          - ip address {{ configuraciones[inventory_hostname].loopback }} 255.255.255.255
+        parents: interface Loopback0
+
+    - name: 2. Configurar interfaces fisicas de transito
+      cisco.ios.ios_config:
+        lines:
+          - description "{{ item.desc }}"
+          - ip address {{ item.ip }} {{ item.mask }}
+          - no shutdown
+        parents: interface {{ item.name }}
+      loop: "{{ configuraciones[inventory_hostname].interfaces }}"
+
+    - name: 3. Guardar configuracion
+      cisco.ios.ios_command:
+        commands: write memory

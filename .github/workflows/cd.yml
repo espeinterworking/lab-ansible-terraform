@@ -1,0 +1,35 @@
+name: 🚀 CD - Despliegue Continuo en EVE-NG (Proxmox)
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  despliegue-produccion:
+    name: Despliegue Automatizado en Routers EVE-NG
+    runs-on: self-hosted
+    env:
+      ANSIBLE_HOST_KEY_CHECKING: False
+    steps:
+      - name: Descargar última versión aprobada del código
+        uses: actions/checkout@v4
+
+      - name: Probar conectividad con EVE-NG en Proxmox
+        run: |
+          echo "🔌 Probando comunicación con EVE-NG (10.9.9.82)..."
+          ping -c 2 10.9.9.82 || echo "⚠️ Alerta de ping, intentando despliegue de todos modos."
+
+      - name: Desplegar Fase 1 - Interfaces, Enlaces Core y Loopbacks
+        run: cd ansible && ansible-playbook -i inventario.ini playbook_1_ips.yml
+
+      - name: Desplegar Fase 2 - Enrutamiento OSPF
+        run: cd ansible && ansible-playbook -i inventario.ini playbook_2_ospf.yml
+
+      - name: Desplegar Fase 3 - Protocolo MPLS LDP
+        run: cd ansible && ansible-playbook -i inventario.ini playbook_3_ldp.yml
+
+      - name: Desplegar Fase 4 - Sesiones MP-BGP y Route Reflector
+        run: cd ansible && ansible-playbook -i inventario.ini playbook_4_bgp.yml
+
+      - name: Desplegar Fase 5 - VRFs de Clientes
+        run: cd ansible && ansible-playbook -i inventario.ini playbook_5_vrf.yml

@@ -1,0 +1,30 @@
+name: 🛡️ CI - Auditoria de Sintaxis NetDevOps
+
+on:
+  pull_request:
+    branches: [ main ]
+  push:
+    branches: [ feature/*, demo/* ]
+
+jobs:
+  auditoria-yaml:
+    name: Revisión de Código Ansible
+    runs-on: ubuntu-latest
+    steps:
+      - name: Descargar código del repositorio
+        uses: actions/checkout@v4
+
+      - name: Instalar Ansible en el entorno de nube
+        run: |
+          sudo apt update
+          sudo apt install -y ansible python3-paramiko python3-netmiko
+          ansible-galaxy collection install cisco.ios
+
+      - name: Auditar sintaxis de los Playbooks
+        run: |
+          cd ansible
+          echo "🔍 Evaluando sintaxis YAML de la infraestructura..."
+          for playbook in playbook_*.yml; do
+            echo "Revisando: $playbook"
+            ansible-playbook --syntax-check "$playbook"
+          done

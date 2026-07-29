@@ -1,0 +1,53 @@
+---
+- name: Fase 4 - Plano de Control iBGP VPNv4
+  hosts: pe_routers, route_reflectors
+  gather_facts: no
+
+  vars:
+    as_number: 15
+    rr_loopback: "15.15.15.4"
+
+  tasks:
+    # ==========================================
+    # CONFIGURACIÓN PE: Apuntan al Route Reflector
+    # ==========================================
+    - name: 1. Configurar PEs apuntando al RR_1
+      cisco.ios.ios_config:
+        lines:
+          - neighbor {{ rr_loopback }} remote-as {{ as_number }}
+          - neighbor {{ rr_loopback }} update-source Loopback0
+          - address-family vpnv4
+          - neighbor {{ rr_loopback }} activate
+          - neighbor {{ rr_loopback }} send-community extended
+          - exit-address-family
+        parents: router bgp {{ as_number }}
+      when: inventory_hostname in groups['pe_routers']
+
+    # ==========================================
+    # CONFIGURACIÓN RR: Declara a los PE como clientes
+    # ==========================================
+    - name: 2. Configurar RR_1 con sus clientes PE_1 y PE_2
+      cisco.ios.ios_config:
+        lines:
+          - bgp log-neighbor-changes
+          # Vecino PE_1
+          - neighbor 15.15.15.1 remote-as {{ as_number }}
+          - neighbor 15.15.15.1 update-source Loopback0
+          # Vecino PE_2
+          - neighbor 15.15.15.5 remote-as {{ as_number }}
+          - neighbor 15.15.15.5 update-source Loopback0
+          # VPNv4 Familia y Reflector de Rutas
+          - address-family vpnv4
+          - neighbor 15.15.15.1 activate
+          - neighbor 15.15.15.1 send-community extended
+          - neighbor 15.15.15.1 route-reflector-client
+          - neighbor 15.15.15.5 activate
+          - neighbor 15.15.15.5 send-community extended
+          - neighbor 15.15.15.5 route-reflector-client
+          - exit-address-family
+        parents: router bgp {{ as_number }}
+      when: inventory_hostname in groups['route_reflectors']
+
+    - name: 3. Guardar configuracion
+      cisco.ios.ios_command:
+        commands: write memory

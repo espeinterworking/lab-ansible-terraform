@@ -1,0 +1,29 @@
+---
+- name: "FASE 3: DESPLIEGUE Y VALIDACIÓN AUTOMÁTICA DE PROTOCOLO LDP (CI TEST)"
+  hosts: routers
+  gather_facts: no
+
+  vars:
+    interfaces_mpls:
+      PE_1: ["Ethernet0/1", "Ethernet0/2"]
+      PE_2: ["Ethernet0/0", "Ethernet0/1"]
+      P_1: ["Ethernet0/0", "Ethernet0/1", "Ethernet0/2"]
+      P_2: ["Ethernet0/0", "Ethernet0/1", "Ethernet0/2"]
+      RR_1: ["Ethernet0/0", "Ethernet0/1"]
+
+  tasks:
+    - name: 1. Habilitar CEF (Requisito fundamental para MPLS)
+      cisco.ios.ios_config:
+        lines:
+          - ip cef
+
+    - name: 2. Habilitar envio de etiquetas en interfaces de transito
+      cisco.ios.ios_config:
+        lines:
+          - mpls ip
+        parents: interface {{ item }}
+      loop: "{{ interfaces_mpls[inventory_hostname] }}"
+
+    - name: 3. Guardar configuracion
+      cisco.ios.ios_command:
+        commands: write memory

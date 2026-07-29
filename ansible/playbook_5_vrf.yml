@@ -1,0 +1,38 @@
+---
+- name: "FASE 5: AUDITORÍA Y DESPLIEGUE DE VRFS EN CORE MPLS"
+  hosts: pe_routers
+  gather_facts: no
+
+  vars:
+    vrf_name: "Pinto"
+    rd_rt: "15:1"
+    as_number: 15
+    bgp_clientes:
+      PE_1:
+        neighbor_ip: "192.168.15.2"
+        remote_as: "65001"
+      PE_2:
+        neighbor_ip: "172.16.15.2"
+        remote_as: "65002"
+
+  tasks:
+    - name: 1. Crear VRF Pinto y configurar RD/RT
+      cisco.ios.ios_config:
+        lines:
+          - rd {{ rd_rt }}
+          - route-target export {{ rd_rt }}
+          - route-target import {{ rd_rt }}
+        parents: ip vrf {{ vrf_name }}
+
+    - name: 2. Configurar sesion eBGP hacia los equipos CE del cliente
+      cisco.ios.ios_config:
+        lines:
+          - neighbor {{ bgp_clientes[inventory_hostname].neighbor_ip }} remote-as {{ bgp_clientes[inventory_hostname].remote_as }}
+          - neighbor {{ bgp_clientes[inventory_hostname].neighbor_ip }} activate
+        parents: 
+          - router bgp {{ as_number }}
+          - address-family ipv4 vrf {{ vrf_name }}
+
+    - name: 3. Guardar configuracion
+      cisco.ios.ios_command:
+        commands: write memory

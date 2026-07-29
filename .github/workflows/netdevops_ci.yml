@@ -1,0 +1,47 @@
+name: NetDevOps CI - Auditoría Automatizada
+
+on:
+  push:
+    branches: [ main, "feature/*" ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  auditoria-terraform:
+    name: 🏗️ Validación de Terraform
+    runs-on: ubuntu-latest
+    steps:
+      - name: Descargar código del repositorio
+        uses: actions/checkout@v4
+
+      - name: Configurar motor de Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Inicializar sin backend local y Validar HCL
+        run: |
+          cd terraform
+          terraform init -backend=false
+          terraform validate
+
+  auditoria-ansible:
+    name: ⚙️ Validación de Sintaxis Ansible (Cisco IOS)
+    runs-on: ubuntu-latest
+    env:
+      ANSIBLE_HOST_KEY_CHECKING: False
+    steps:
+      - name: Descargar código del repositorio
+        uses: actions/checkout@v4
+
+      - name: Instalar Ansible, Dependencias de Python y Colecciones
+        run: |
+          sudo apt update
+          sudo apt install -y ansible python3-paramiko python3-netmiko
+          ansible-galaxy collection install cisco.ios
+
+      - name: Auditoría de Sintaxis en todos los Playbooks
+        run: |
+          cd ansible
+          for playbook in *.yml; do
+            echo "🔎 Auditando sintaxis de: $playbook"
+            ansible-playbook -i inventario.ini "$playbook" --syntax-check --connection=local
+          done

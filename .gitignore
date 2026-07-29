@@ -1,0 +1,24 @@
+# =========================
+# TERRAFORM (Archivos locales y de estado)
+# =========================
+.terraform/
+.terraform.lock.hcl
+*.tfstate
+*.tfstate.backup
+*.tfvars
+*.tfvars.json
+
+# =========================
+# ANSIBLE & LOGS
+# =========================
+*.retry
+*.log
+.ansible/
+__pycache__/
+
+# =========================
+# SISTEMA Y CLAVES SSH
+# =========================
+id_rsa*
+*.pem
+.DS_Store

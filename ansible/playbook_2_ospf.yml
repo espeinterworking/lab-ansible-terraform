@@ -1,0 +1,43 @@
+---
+- name: Fase 2 - Enrutamiento Base OSPF y LDP Sync
+  hosts: routers
+  gather_facts: no
+
+  vars:
+    configuraciones:
+      PE_1:
+        loopback: "15.15.15.1"
+        interfaces: ["Ethernet0/1", "Ethernet0/2"]
+      PE_2:
+        loopback: "15.15.15.5"
+        interfaces: ["Ethernet0/0", "Ethernet0/1"]
+      P_1:
+        loopback: "15.15.15.3"
+        interfaces: ["Ethernet0/0", "Ethernet0/1", "Ethernet0/2"]
+      P_2:
+        loopback: "15.15.15.2"
+        interfaces: ["Ethernet0/0", "Ethernet0/1", "Ethernet0/2"]
+      RR_1:
+        loopback: "15.15.15.4"
+        interfaces: ["Ethernet0/0", "Ethernet0/1"]
+
+  tasks:
+    - name: 1. Optimizar convergencia (OSPF Point-to-Point) en interfaces
+      cisco.ios.ios_config:
+        lines:
+          - ip ospf network point-to-point
+        parents: interface {{ item }}
+      loop: "{{ configuraciones[inventory_hostname].interfaces }}"
+
+    - name: 2. Configurar proceso OSPF 1 y sincronizacion LDP
+      cisco.ios.ios_config:
+        lines:
+          - router-id {{ configuraciones[inventory_hostname].loopback }}
+          - network {{ configuraciones[inventory_hostname].loopback }} 0.0.0.0 area 0
+          - network 10.15.0.0 0.0.255.255 area 0
+          - mpls ldp sync
+        parents: router ospf 1
+
+    - name: 3. Guardar configuracion
+      cisco.ios.ios_command:
+        commands: write memory

@@ -1,0 +1,73 @@
+1. Router PE_1
+enable
+conf t
+hostname PE_1
+ip domain-name espe.edu.ec
+crypto key generate rsa modulus 2048
+username automatizacion privilege 15 secret cisco123
+line vty 0 4
+ login local
+ transport input ssh
+ exit
+end
+write memory
+
+
+2. Router P_2
+enable
+conf t
+hostname P_2
+ip domain-name espe.edu.ec
+crypto key generate rsa modulus 2048
+username automatizacion privilege 15 secret cisco123
+line vty 0 4
+ login local
+ transport input ssh
+ exit
+end
+write memory
+
+
+3. Router P_1
+enable
+conf t
+hostname P_1
+ip domain-name espe.edu.ec
+crypto key generate rsa modulus 2048
+username automatizacion privilege 15 secret cisco123
+line vty 0 4
+ login local
+ transport input ssh
+ exit
+end
+write memory
+
+
+4. Router RR_1
+enable
+conf t
+hostname RR_1
+ip domain-name espe.edu.ec
+crypto key generate rsa modulus 2048
+username automatizacion privilege 15 secret cisco123
+line vty 0 4
+ login local
+ transport input ssh
+ exit
+end
+write memory
+
+
+5. Router PE_2
+enable
+conf t
+hostname PE_2
+ip domain-name espe.edu.ec
+crypto key generate rsa modulus 2048
+username automatizacion privilege 15 secret cisco123
+line vty 0 4
+ login local
+ transport input ssh
+ exit
+end
+write memory
